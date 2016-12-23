@@ -44,34 +44,49 @@ public class MovieAnalysis extends Configured implements Tool, Serializable {
         String inputPathMovies = args[1];
         String outputPathTagsMovies = args[2];
 
-        // Create an object to coordinate pipeline creation and execution.
         // Creating the pipeline instance
-        // We will usually use MRPipeline. there's also MEMPipeline and SparkPipeline
-        // Here it will get the name of the current class and the command line args
         Pipeline pipeline = new MRPipeline(MovieAnalysis.class, getConf());
 
         // Reference a given text file as a collection of Strings.
-        // this is kind of like parallelizing in spark - specifying input for job
-        // the input can be any hadoop InputFormat
-        // Here we parallelize the a text file
+        // The input can be any hadoop InputFormat
         //PCollection<String> ratings = pipeline.readTextFile(inputPathRates);
         PCollection<String> tags = pipeline.readTextFile(inputPathTags);
         PCollection<String> movies = pipeline.readTextFile(inputPathMovies);
 
+        // Get PTable objects for each file
+        // Parsing each line according to the separator "::"
+        // Also choose which column will be the key column and which will be the value column
+        PTable<String, String> movieForTagsPrep = FilePrep.getFileAsPTable(movies, 0, 1);
+        PTable<String, String> tagsPrep = FilePrep.getFileAsPTable(tags, 1, 2);
+
+        // Normalize data
+        // 1. We may also want to consider using only lower case strings
+        //    in case the data is not consistent.
+        // 2. Remove null results after any left joins (see next code block)
+
         // Get most common tag for a movie title
 
-        // Get PTable objects for each file
-        PTable<String, String> movieForTagsPrep = FilePrep.getFileAsPTable(movies, 0, 1);
-        PTable<String, String> tagsPrep = FilePrep.getTagFileAsPTable(tags, 1, 2);
-
-        // Join movies and tags tables on movie id
-        // get (movie_id, movie_title) and (movie_id, tag)
-        // join on movie_id
+        // Join movies (movie_id, movie_title) and tags (movie_id, tag) tables on movie id
+        // Also filter out any null tags - movies that didn't have tags
+        // We will end up with (movie_id, (movie_title, movie_tag))
         PTable<String, Pair<String, String>> joinedMovieTags = Join
-                .leftJoin(movieForTagsPrep, tagsPrep); // now we have (movie_id, (movie_title, movie_tag))
+                .leftJoin(movieForTagsPrep, tagsPrep)
+                .filter(new FilterFn<Pair<String, Pair<String, String>>>() {
 
+                    @Override
+                    public boolean accept(final Pair<String, Pair<String, String>> pairMoviePair) {
+                        if (pairMoviePair.second().second() == null) {
+                            return false;
+                        }
+                        else {
+                            return true;
+                        }
+                    }
+                });
 
-        // key on Pair.of(movie_title, tag), groupbykey, aggregate.SUM_INTS
+        // Key on (movie_title, tag)
+        // Set a value of 1 for each pair
+        // groupByKey, aggregate.SUM_INTS
         PTable<Pair<String, String>, Integer> sumOfTagsPerMovie = PTables
                 .swapKeyValue(joinedMovieTags)
                 .mapValues(new MapFn<String, Integer>() {
@@ -80,6 +95,8 @@ public class MovieAnalysis extends Configured implements Tool, Serializable {
                 .groupByKey()
                 .combineValues(Aggregators.SUM_INTS()); // ((movie_title, movie_tag), count)
 
+        // Key on movie_title, groupByKey
+        // Aggregation returns the (tag, count) with the highest count
         PTable<String, Pair<String, Integer>> maxTagPerTitle = ReorderKV.getReorderedTable(sumOfTagsPerMovie) // returns PTable(String, (String, Integer))
                 .groupByKey() // returns PTableGrouped(String, (String, Integer))
                 .combineValues(new CombineFn<String, Pair<String, Integer>>() {
@@ -95,17 +112,14 @@ public class MovieAnalysis extends Configured implements Tool, Serializable {
                     }
                 });
 
-        // leave only the tag
+        // Leave only the tag
         PTable<String, String> onlyTagPerTitle = maxTagPerTitle
                 .mapValues(new MapFn<Pair<String, Integer>, String>() {
                     public String map(Pair<String, Integer> maxTagPair) { return maxTagPair.first();}
                 }, (Writables.strings()));
 
-//        pipeline.writeTextFile(onlyTagPerTitle, outputPathTagsMovies);
-//        sumOfTagsPerMovie.write(At.textFile(outputPathTagsMovies));
-//        pipeline.writeTextFile(test, outputPathTagsMovies);
-        pipeline.writeTextFile(maxTagPerTitle, outputPathTagsMovies);
-        System.out.print("G\n");
+        // Write result to file
+        pipeline.writeTextFile(onlyTagPerTitle, outputPathTagsMovies);
 //
 //
 //
@@ -117,6 +131,7 @@ public class MovieAnalysis extends Configured implements Tool, Serializable {
 //        PTable<String, Pair<String, String>> joinedMovieRatings = Join.leftJoin(movieForGenresPrep, ratingsPrep);
 //
         PipelineResult result = pipeline.done();
+
         System.out.print("Result " + result.succeeded() + "\n");
         return result.succeeded() ? 0 : 1;
     }

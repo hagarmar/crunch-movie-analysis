@@ -31,18 +31,18 @@ public class FilePrep {
     }
 
     // split by row and by tag
-    static public PTable<String, String> getTagFileAsPTable(PCollection<String> textFile,
+    static public PTable<String, String> getMovieFileAsPTable(PCollection<String> textFile,
                                                          final Integer columnK,
-                                                         final Integer columnV) {
+                                                         final Integer columnSplit) {
         PTypeFamily tf = textFile.getTypeFamily();
         return textFile.parallelDo(new DoFn<String, Pair<String, String>>() {
 
             @Override
             public void process(String input, Emitter<Pair<String, String>> emitter) {
                 String[] parts = StringUtils.split(input, "::");
-                for (String tag: parts[columnV].split("\\|")) {
+                for (String genre: parts[columnSplit].split("\\|")) {
                     // Pair.of returns a (k, v) pair
-                    emitter.emit(Pair.of(parts[columnK], tag));
+                    emitter.emit(Pair.of(parts[columnK], genre));
                 }
             }
         }, tf.tableOf(tf.strings(), tf.strings()));
