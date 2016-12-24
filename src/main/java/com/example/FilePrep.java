@@ -14,16 +14,28 @@ import org.apache.commons.lang.StringUtils;
  */
 public class FilePrep {
 
+    static private final String ROW_SEPARATOR = "::";
+
+    static private final String CELL_SEPARATOR = "\\|";
+
+    static private String[] splitStringBySeparator(String row, String separator) {
+        return StringUtils.split(row, separator);
+    }
+
+    static private PTypeFamily getTypeFamilyFromTextFile(PCollection<String>textFile) {
+        return textFile.getTypeFamily();
+    }
+
     // split file by rows (with separator)
     static public PTable<String, String> getFileAsPTable(PCollection<String> textFile,
                                                              final Integer columnK,
                                                              final Integer columnV) {
-        PTypeFamily tf = textFile.getTypeFamily();
+        PTypeFamily tf = getTypeFamilyFromTextFile(textFile);
         return textFile.parallelDo(new DoFn<String, Pair<String, String>>() {
 
             @Override
             public void process(String input, Emitter<Pair<String, String>> emitter) {
-                String[] parts = StringUtils.split(input, "::");
+                String[] parts = splitStringBySeparator(input, ROW_SEPARATOR);
                 // Pair.of returns a (k, v) pair
                 emitter.emit(Pair.of(parts[columnK], parts[columnV]));
             }
@@ -33,14 +45,14 @@ public class FilePrep {
     // split by row and by tag
     static public PTable<String, String> getMovieFileAsPTable(PCollection<String> textFile,
                                                          final Integer columnK,
-                                                         final Integer columnSplit) {
-        PTypeFamily tf = textFile.getTypeFamily();
+                                                         final Integer columnV) {
+        PTypeFamily tf = getTypeFamilyFromTextFile(textFile);
         return textFile.parallelDo(new DoFn<String, Pair<String, String>>() {
 
             @Override
             public void process(String input, Emitter<Pair<String, String>> emitter) {
-                String[] parts = StringUtils.split(input, "::");
-                for (String genre: parts[columnSplit].split("\\|")) {
+                String[] parts = splitStringBySeparator(input, ROW_SEPARATOR);
+                for (String genre: splitStringBySeparator(parts[columnV], CELL_SEPARATOR)) {
                     // Pair.of returns a (k, v) pair
                     emitter.emit(Pair.of(parts[columnK], genre));
                 }
@@ -48,6 +60,21 @@ public class FilePrep {
         }, tf.tableOf(tf.strings(), tf.strings()));
     }
 
+    // return three columns
+    static public PTable<String, Pair<String, String>> getRatingsFileAsPTable(PCollection<String> textFile,
+                                                                              final Integer columnK,
+                                                                              final Integer columnVFirst,
+                                                                              final Integer columnVSecond) {
+        PTypeFamily tf = getTypeFamilyFromTextFile(textFile);
+        return textFile.parallelDo(new DoFn<String, Pair<String, Pair<String, String>>>() {
 
+            @Override
+            public void process(String input, Emitter<Pair<String, Pair<String, String>>> emitter) {
+                String[] parts = splitStringBySeparator(input, ROW_SEPARATOR);
+                    // Pair.of returns a (k, v) pair
+                    emitter.emit(Pair.of(parts[columnK], Pair.of(parts[columnVFirst], parts[columnVSecond])));
+                }
+        }, tf.tableOf(tf.strings(), tf.pairs(tf.strings(), tf.strings())));
+    }
 }
 

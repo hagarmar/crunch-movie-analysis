@@ -31,7 +31,7 @@ public class MovieAnalysis extends Configured implements Tool, Serializable {
 
     public int run(String[] args) throws Exception {
 
-        if (args.length < 3) {
+        if (args.length < 5) {
             System.err.println("Usage: hadoop jar crunchtask-1.0-SNAPSHOT-job.jar"
                     + " input");
             System.err.println();
@@ -42,16 +42,19 @@ public class MovieAnalysis extends Configured implements Tool, Serializable {
         // String inputPathRates = args[0];
         String inputPathTags = args[0];
         String inputPathMovies = args[1];
-        String outputPathTagsMovies = args[2];
+        String inputPathRates = args[2];
+        String outputPathTagsMovies = args[3];
+        String outputPathUserGenres = args[4];
 
         // Creating the pipeline instance
         Pipeline pipeline = new MRPipeline(MovieAnalysis.class, getConf());
 
         // Reference a given text file as a collection of Strings.
         // The input can be any hadoop InputFormat
-        //PCollection<String> ratings = pipeline.readTextFile(inputPathRates);
         PCollection<String> tags = pipeline.readTextFile(inputPathTags);
         PCollection<String> movies = pipeline.readTextFile(inputPathMovies);
+        PCollection<String> ratings = pipeline.readTextFile(inputPathRates);
+
 
         // Get PTable objects for each file
         // Parsing each line according to the separator "::"
@@ -64,7 +67,9 @@ public class MovieAnalysis extends Configured implements Tool, Serializable {
         //    in case the data is not consistent.
         // 2. Remove null results after any left joins (see next code block)
 
+        // 1.
         // Get most common tag for a movie title
+        //
 
         // Join movies (movie_id, movie_title) and tags (movie_id, tag) tables on movie id
         // Also filter out any null tags - movies that didn't have tags
@@ -103,7 +108,7 @@ public class MovieAnalysis extends Configured implements Tool, Serializable {
                     @Override
                     public void process(Pair<String, Iterable<Pair<String, Integer>>> input,
                                         Emitter<Pair<String, Pair<String, Integer>>> emitter) {
-                        String maxTag = "None";
+                        String maxTag = null;
                         Integer maxValue = 0;
                         for (Pair<String, Integer> dw : input.second()) {
                             if (dw.second() > maxValue) { maxValue = dw.second(); maxTag = dw.first(); }
@@ -120,14 +125,19 @@ public class MovieAnalysis extends Configured implements Tool, Serializable {
 
         // Write result to file
         pipeline.writeTextFile(onlyTagPerTitle, outputPathTagsMovies);
-//
-//
-//
-//        // Get most common genre for a rater
-//        PTable<String, String> movieForGenresPrep = FilePrep.getFileAsPTable(movies, 0, 2);
-//        PTable<String, String> ratingsPrep = FilePrep.getFileAsPTable(ratings, 1, 2);
-//
-//        // Join ratings and movies tables on movie id
+
+        // 2.
+        // Get most common genre for a rater
+        //
+
+        PTable<String, String> movieForGenresPrep = FilePrep.getMovieFileAsPTable(movies, 0, 2);
+        PTable<String, Pair<String, String>> ratingsPrep = FilePrep
+                .getRatingsFileAsPTable(ratings, 1, 0, 2);
+
+        // Write result to file
+        pipeline.writeTextFile(ratingsPrep, outputPathUserGenres);
+
+        // Join ratings and movies tables on movie id
 //        PTable<String, Pair<String, String>> joinedMovieRatings = Join.leftJoin(movieForGenresPrep, ratingsPrep);
 //
         PipelineResult result = pipeline.done();
