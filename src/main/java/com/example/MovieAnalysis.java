@@ -93,13 +93,11 @@ public class MovieAnalysis extends Configured implements Tool, Serializable {
         // Key on (movie_title, tag)
         // Set a value of 1 for each pair
         // groupByKey, aggregate.SUM_INTS
-        PTable<Pair<String, String>, Long> sumOfTagsPerMovie = PTables
-                .swapKeyValue(joinedMovieTags)
-                .mapValues(new MapFn<String, Long>() {
-                        public Long map(String currValue) { return 1L; }
-                    }, (Writables.longs()))
-                .groupByKey()
-                .combineValues(Aggregators.SUM_LONGS()); // ((movie_title, movie_tag), count)
+        // Now we don't need the movie_id anymore. Get to (user_id, genre)
+        PTable<String, String> moviesToTags = ReorderKV.makeValueIntoKey(joinedMovieTags);
+
+        // count the appearance of each pair
+        PTable<Pair<String, String>, Long> sumOfTagsPerMovie = Aggregate.count(moviesToTags);
 
         // Key on movie_title, groupByKey
         // Aggregation returns the (tag, count) with the highest count
