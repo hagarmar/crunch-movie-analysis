@@ -1,7 +1,6 @@
 package com.example;
 
-import com.example.utilities.ComputeXPerY;
-import com.example.utilities.FilePrep;
+import com.example.utilities.*;
 import org.apache.crunch.*;
 import org.apache.crunch.io.At;
 import org.apache.crunch.lib.Join;
@@ -13,15 +12,25 @@ import org.apache.crunch.types.writable.Writables;
 public class UsersByGenres {
 
     static public PTable<String, String> prepMovies(PCollection<String> movies) {
-        return FilePrep.getMovieFileAsPTable(movies, 0, 2);
+        PTable<String, String> movieTable = movies
+                .parallelDo(new LineSplitter(0, 2, LineSplitter.numExpectedRowsMovies),
+                Writables.tableOf(Writables.strings(), Writables.strings())
+                );
+
+        return movieTable.parallelDo(
+                new GenreSplitter(),
+                Writables.tableOf(Writables.strings(), Writables.strings())
+        );
     }
 
 
     static public PTable<String, String> prepRatings(PCollection<String> ratings) {
         // Remove users with null ratings (not sure there are any, but just to be sure)
         // After we're sure users have ratings, throw out the ratings
-        return FilePrep
-                .getRatingsFileAsPTable(ratings, 1, 0, 2)
+        return ratings
+                .parallelDo(new LineSplitterForPair(1, 0,
+                            2, LineSplitterForPair.numExpectedRowsRatings),
+                    Writables.tableOf(Writables.strings(), Writables.pairs(Writables.strings(), Writables.strings())))
                 .filter(new FilterFn<Pair<String, Pair<String, String>>>() {
                     @Override
                     public boolean accept(Pair<String, Pair<String, String>> moviesPerUserRating) {

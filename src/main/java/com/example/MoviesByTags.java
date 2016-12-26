@@ -1,10 +1,11 @@
 package com.example;
 
 import com.example.utilities.ComputeXPerY;
-import com.example.utilities.FilePrep;
+import com.example.utilities.LineSplitter;
 import org.apache.crunch.*;
 import org.apache.crunch.io.At;
 import org.apache.crunch.lib.Join;
+import org.apache.crunch.types.writable.Writables;
 
 /**
  * Created by hagar on 12/25/16.
@@ -13,12 +14,16 @@ import org.apache.crunch.lib.Join;
 public class MoviesByTags {
 
     static public PTable<String, String> prepMovies(PCollection<String> movies)  {
-        return FilePrep.getFileAsPTable(movies, 0, 1);
+        return movies.parallelDo(
+                new LineSplitter(0, 1, LineSplitter.numExpectedRowsMovies),
+                Writables.tableOf(Writables.strings(), Writables.strings()));
     }
 
 
     static public PTable<String, String> prepTags(PCollection<String> tags)  {
-        return FilePrep.getFileAsPTable(tags, 1, 2);
+        return tags.parallelDo(
+                new LineSplitter(1, 2, LineSplitter.numExpectedRowsTags),
+                Writables.tableOf(Writables.strings(), Writables.strings()));
     }
 
 
@@ -59,9 +64,10 @@ public class MoviesByTags {
     static public void run(PCollection<String> movies,
                           PCollection<String> tags,
                           String outputPath) {
+        PTable<String, String> moviesByTags = getMaxTagPerTitle(movies, tags);
 
         // Write result to file
-        writeOutputFile(getMaxTagPerTitle(movies, tags), outputPath);
+        writeOutputFile(moviesByTags, outputPath);
 
     }
 }
