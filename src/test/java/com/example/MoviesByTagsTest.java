@@ -5,13 +5,12 @@ import org.apache.crunch.PCollection;
 import org.apache.crunch.PTable;
 import org.apache.crunch.Pair;
 import org.apache.crunch.impl.mem.MemPipeline;
-import org.apache.crunch.lib.Sort;
 import org.apache.crunch.types.writable.Writables;
-import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 import org.junit.Assert;
 
 /**
+ * Tests for MoviesByTags.
  * Created by hagar on 12/25/16.
  */
 public class MoviesByTagsTest {
@@ -118,14 +117,16 @@ public class MoviesByTagsTest {
     @Test
     public void prepMoviesTest() {
         PTable<String, String> moviesCleanObserved = getPreppedMovie(movies);
-        Assert.assertEquals(moviesCleanExpected.toString(), moviesCleanObserved.toString());
+        Assert.assertEquals(moviesCleanObserved.toString(),
+                            moviesCleanExpected.toString());
 
     }
 
     @Test
     public void prepTagsTest() {
         PTable<String, String> tagsCleanObserved = getPreppedTags(tags);
-        Assert.assertEquals(tagsCleanExpected.toString(), tagsCleanObserved.toString());
+        Assert.assertEquals(tagsCleanObserved.toString(),
+                            tagsCleanExpected.toString());
 
     }
 
@@ -137,7 +138,8 @@ public class MoviesByTagsTest {
         PTable<String, Pair<String, String>> joinMoviesAndTagsObserved = MoviesByTags
                 .joinMoviesAndTags(moviesCleanObserved, tagsCleanObserved);
 
-        Assert.assertEquals(joinedMoviesTagsExpected.toString(), joinMoviesAndTagsObserved.toString());
+        Assert.assertEquals(joinMoviesAndTagsObserved.toString(),
+                            joinedMoviesTagsExpected.toString());
     }
 }
 

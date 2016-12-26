@@ -5,6 +5,7 @@ import org.apache.crunch.DoFn;
 import org.apache.crunch.types.writable.Writables;
 
 /**
+ * Functions for reordering K, V elements.
  * Created by hagar on 12/16/16.
  */
 

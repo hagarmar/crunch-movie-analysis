@@ -9,6 +9,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
+ * Tests for Utilities/MostFrequentPair
  * Created by hagar on 12/25/16.
  */
 
@@ -115,21 +116,21 @@ public class MostFrequentPairTest {
     public void testOneMaxFirst() {
         PTable<String, Pair<String, Long>>mostFrequentExpected = caseOneMaxFirst.groupByKey().combineValues(new MostFrequentPair());
 
-        Assert.assertEquals(mostFrequentExpected, caseOneMaxFirstExpected);
+        Assert.assertEquals(caseOneMaxFirstExpected.toString(), mostFrequentExpected.toString());
     }
 
     @Test
     public void testOneMaxLast() {
         PTable<String, Pair<String, Long>>mostFrequentExpected = caseOneMaxLast.groupByKey().combineValues(new MostFrequentPair());
 
-        Assert.assertEquals(mostFrequentExpected, caseOneMaxLastExpected);
+        Assert.assertEquals(caseOneMaxLastExpected.toString(), mostFrequentExpected.toString());
     }
 
     @Test
     public void testOne() {
         PTable<String, Pair<String, Long>>mostFrequentExpected = caseOne.groupByKey().combineValues(new MostFrequentPair());
 
-        Assert.assertEquals(mostFrequentExpected, caseOneExpected);
+        Assert.assertEquals(caseOneExpected.toString(), mostFrequentExpected.toString());
     }
 
 
@@ -137,20 +138,20 @@ public class MostFrequentPairTest {
     public void testJustTie() {
         PTable<String, Pair<String, Long>>mostFrequentExpected = caseJustTie.groupByKey().combineValues(new MostFrequentPair());
 
-        Assert.assertEquals(mostFrequentExpected, caseJustTieExpected);
+        Assert.assertEquals(caseJustTieExpected.toString(), mostFrequentExpected.toString());
     }
 
     @Test
     public void testTieIsMax() {
         PTable<String, Pair<String, Long>>mostFrequentExpected = caseTieIsMax.groupByKey().combineValues(new MostFrequentPair());
 
-        Assert.assertEquals(mostFrequentExpected, caseTieIsMaxExpected);
+        Assert.assertEquals(mostFrequentExpected.toString(), caseTieIsMaxExpected.toString());
     }
 
     @Test
     public void testTieNotMax() {
         PTable<String, Pair<String, Long>>mostFrequentExpected = caseTieNotMax.groupByKey().combineValues(new MostFrequentPair());
 
-        Assert.assertEquals(mostFrequentExpected, caseTieNotMaxExpected);
+        Assert.assertEquals(mostFrequentExpected.toString(), caseTieNotMaxExpected.toString());
     }
 }

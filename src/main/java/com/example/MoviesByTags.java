@@ -16,14 +16,14 @@ public class MoviesByTags {
 
     static public PTable<String, String> prepMovies(PCollection<String> movies)  {
         return movies.parallelDo(
-                new LineSplitter(0, 1, LineSplitter.numExpectedRowsMovies),
+                new LineSplitter(0, 1),
                 Writables.tableOf(Writables.strings(), Writables.strings()));
     }
 
 
     static public PTable<String, String> prepTags(PCollection<String> tags)  {
         return tags.parallelDo(
-                new LineSplitter(1, 2, LineSplitter.numExpectedRowsTags),
+                new LineSplitter(1, 2),
                 Writables.tableOf(Writables.strings(), Writables.strings()));
     }
 
@@ -56,9 +56,7 @@ public class MoviesByTags {
 
         // count number of tags per movie_id
         // return the most common tag
-        PTable<String, String> maxTagPerTitle = ComputeXPerY.countAndMaxXPerY(joinedMovieTags);
-
-        return maxTagPerTitle;
+        return ComputeXPerY.countAndMaxXPerY(joinedMovieTags);
     }
 
 

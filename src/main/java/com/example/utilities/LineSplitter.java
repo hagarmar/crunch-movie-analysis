@@ -12,21 +12,14 @@ import org.apache.crunch.*;
  */
 public class LineSplitter extends DoFn<String, Pair<String, String>> {
 
-    public Integer keyColumn, valueColumn, numExpectedRows;
+    public Integer keyColumn, valueColumn;
 
     static String ROW_SEPARATOR = "::";;
 
-    static public Integer numExpectedRowsMovies = 3;
-
-    static public Integer numExpectedRowsTags = 4;
-
     public LineSplitter(Integer columnForKey,
-                        Integer columnForValue,
-                        Integer numExpectedRows) {
-
+                        Integer columnForValue) {
         this.keyColumn = columnForKey;
         this.valueColumn = columnForValue;
-        this.numExpectedRows = numExpectedRows;
     }
 
     static public String[] splitStringBySeparator(String row, String separator) {
@@ -36,10 +29,9 @@ public class LineSplitter extends DoFn<String, Pair<String, String>> {
     @Override
     public void process (String input, Emitter <Pair<String, String >> emitter) {
         String[] parts = splitStringBySeparator(input, ROW_SEPARATOR);
-        if (parts.length == this.numExpectedRows) {
-            // Pair.of returns a (k, v) pair
-            emitter.emit(Pair.of(parts[this.keyColumn], parts[this.valueColumn]));
-        }
+        // We can compare parts.length against an expected value
+        // Pair.of returns a (k, v) pair
+        emitter.emit(Pair.of(parts[this.keyColumn], parts[this.valueColumn]));
     }
 }
 

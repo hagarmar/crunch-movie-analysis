@@ -15,7 +15,7 @@ public class UsersByGenres {
 
     static public PTable<String, String> prepMovies(PCollection<String> movies) {
         PTable<String, String> movieTable = movies
-                .parallelDo(new LineSplitter(0, 2, LineSplitter.numExpectedRowsMovies),
+                .parallelDo(new LineSplitter(0, 2),
                 Writables.tableOf(Writables.strings(), Writables.strings())
                 );
 
@@ -30,11 +30,10 @@ public class UsersByGenres {
         // Remove users with null ratings (not sure there are any, but just to be sure)
         // After we're sure users have ratings, throw out the ratings
         return ratings
-                .parallelDo(new LineSplitterForPair(1, 0,
-                            2, LineSplitterForPair.numExpectedRowsRatings),
+                .parallelDo(new LineSplitterForPair(0, 1, 2),
                     Writables.tableOf(Writables.strings(),
                             Writables.pairs(Writables.strings(), Writables.strings())))
-                .filter(new FilterEmptyValues())
+                .filter(new FilterMissingRatings())
                 .mapValues(new MapFn<Pair<String, String>, String>() {
                     @Override
                     public String map(Pair<String, String> usersAndRatings) {
@@ -60,10 +59,7 @@ public class UsersByGenres {
         // Filter movies with no users
         PTable<String, Pair<String, String>> joinedUsersGenres = joinUsersAndGenres(usersClean, moviesClean);
 
-        // Leave only the tag
-        PTable<String, String> onlyGenrePerUser = ComputeXPerY.countAndMaxXPerY(joinedUsersGenres);
-
-        return onlyGenrePerUser;
+        return ComputeXPerY.countAndMaxXPerY(joinedUsersGenres);
     }
 
 

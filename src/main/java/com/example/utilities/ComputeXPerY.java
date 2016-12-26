@@ -1,14 +1,16 @@
 package com.example.utilities;
 
-import org.apache.crunch.CombineFn;
 import org.apache.crunch.MapFn;
 import org.apache.crunch.PTable;
 import org.apache.crunch.Pair;
 import org.apache.crunch.lib.Aggregate;
 import org.apache.crunch.types.writable.Writables;
-import org.apache.crunch.Emitter;
 
 /**
+ * Several functions that allow
+ * 1. counting how many Xs Per Y
+ * 2. finding the argmax from the count of Xs Per Y
+ * and ultimately returning the most frequent X per Y.
  * Created by hagar on 12/25/16.
  */
 public class ComputeXPerY {
@@ -16,6 +18,7 @@ public class ComputeXPerY {
     static private PTable<Pair<String, String>, Long> countXPerY(
             PTable<String, Pair<String, String>> joinedXAndY) {
         PTable<String, String> countedXPerY = ReorderKV.makeValueIntoKey(joinedXAndY);
+        // builtin function for returning the count per key
         return Aggregate.count(countedXPerY);
     }
 

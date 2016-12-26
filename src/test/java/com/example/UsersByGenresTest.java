@@ -5,21 +5,23 @@ import org.apache.crunch.PCollection;
 import org.apache.crunch.PTable;
 import org.apache.crunch.Pair;
 import org.apache.crunch.impl.mem.MemPipeline;
+import org.apache.crunch.lib.Sort;
 import org.apache.crunch.types.writable.Writables;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
+ * Tests for UserByGenres
  * Created by hagar on 12/25/16.
  */
 public class UsersByGenresTest {
     private PCollection<String> movies = MemPipeline.typedCollectionOf(
             Writables.strings(),
             List.of(
-                    "1::Toy Story (1995)::Adventure|Animation|Children|Comedy|Fantasy",
-                    "2::Jumanji (1995)::Adventure|Children|Fantasy",
-                    "3::Grumpier Old Men (1995)::Adventure|Children|Fantasy",
-                    "4::Waiting to Exhale (1995)::Comedy|Drama|Romance",
+                    "1::Toy Story (1995)::Adventure|Animation",
+                    "2::Jumanji (1995)::Adventure|Fantasy",
+                    "3::Grumpier Old Men (1995)::Children|Fantasy",
+                    "4::Waiting to Exhale (1995)::Comedy",
                     "5::Father of the Bride Part II (1995)::Comedy",
                     "0::Test (1970)::Fantasy"
             )
@@ -29,9 +31,12 @@ public class UsersByGenresTest {
     private PTable<String, String> moviesCleanExpected = MemPipeline.typedTableOf(
             Writables.tableOf(Writables.strings(), Writables.strings()),
             List.of(
-                    Pair.of("1", "Adventure|Animation"),
-                    Pair.of("2", "Adventure|Fantasy"),
-                    Pair.of("3", "Children|Fantasy"),
+                    Pair.of("1", "Adventure"),
+                    Pair.of("1", "Animation"),
+                    Pair.of("2", "Adventure"),
+                    Pair.of("2", "Fantasy"),
+                    Pair.of("3", "Children"),
+                    Pair.of("3", "Fantasy"),
                     Pair.of("4", "Comedy"),
                     Pair.of("5", "Comedy"),
                     Pair.of("0", "Fantasy")
@@ -49,7 +54,7 @@ public class UsersByGenresTest {
                     "2::339::5::838983392",
                     "3::316::5::838983392",
                     "3::339::5::838983392",
-                    "3::340::null::838983392",
+                    "3::340::::838983392",
                     "4::111::3::838983392"
             )
     );
@@ -86,18 +91,18 @@ public class UsersByGenresTest {
             Writables.tableOf(Writables.strings(), Writables.pairs(Writables.strings(), Writables.strings())),
             List.of(
                     Pair.of("1", Pair.of("122", "Adventure")),
-                    Pair.of("1", Pair.of("122", "Animation")),
                     Pair.of("1", Pair.of("329", "Adventure")),
-                    Pair.of("1", Pair.of("329", "Animation")),
                     Pair.of("1", Pair.of("316", "Adventure")),
+                    Pair.of("1", Pair.of("122", "Animation")),
+                    Pair.of("1", Pair.of("329", "Animation")),
                     Pair.of("1", Pair.of("316", "Animation")),
                     Pair.of("2", Pair.of("122", "Adventure")),
-                    Pair.of("2", Pair.of("122", "Fantasy")),
                     Pair.of("2", Pair.of("339", "Adventure")),
+                    Pair.of("2", Pair.of("122", "Fantasy")),
                     Pair.of("2", Pair.of("339", "Fantasy")),
                     Pair.of("3", Pair.of("316", "Children")),
-                    Pair.of("3", Pair.of("316", "Fantasy")),
                     Pair.of("3", Pair.of("339", "Children")),
+                    Pair.of("3", Pair.of("316", "Fantasy")),
                     Pair.of("3", Pair.of("339", "Fantasy")),
                     Pair.of("4", Pair.of("111", "Comedy"))
             )
@@ -106,8 +111,8 @@ public class UsersByGenresTest {
     @Test
     public void usersByGenresTest() {
         PTable<String, String> usersByGenresObserved = UsersByGenres.getMaxGenrePerUser(ratings, movies);
-        Assert.assertEquals((usersByGenresObserved).toString(),
-                (usersByGenresExpected).toString());
+        Assert.assertEquals(Sort.sort(usersByGenresObserved).toString(),
+                            Sort.sort(usersByGenresExpected).toString());
     }
 
 
@@ -117,21 +122,23 @@ public class UsersByGenresTest {
 
 
     private PTable<String, String> getPreppedRatings(PCollection<String> ratings) {
-        return UsersByGenres.prepRatings(movies);
+        return UsersByGenres.prepRatings(ratings);
     }
 
 
     @Test
     public void prepMoviesTest() {
         PTable<String, String> moviesCleanObserved = getPreppedMovie(movies);
-        Assert.assertEquals(moviesCleanExpected.toString(), moviesCleanObserved.toString());
+        Assert.assertEquals(moviesCleanObserved.toString(),
+                            moviesCleanExpected.toString());
 
     }
 
     @Test
     public void prepRatingsTest() {
         PTable<String, String> ratingsCleanObserved = getPreppedRatings(ratings);
-        Assert.assertEquals(ratingsCleanExpected.toString(), ratingsCleanObserved.toString());
+        Assert.assertEquals(ratingsCleanObserved.toString(),
+                            ratingsCleanExpected.toString());
 
     }
 
@@ -139,10 +146,11 @@ public class UsersByGenresTest {
     @Test
     public void joinMoviesAndTagsTest() {
         PTable<String, String> moviesCleanObserved = getPreppedMovie(movies);
-        PTable<String, String> ratingsCleanObserverd = getPreppedRatings(ratings);
+        PTable<String, String> ratingsCleanObserved = getPreppedRatings(ratings);
         PTable<String, Pair<String, String>> joinedUsersAndGenresObserved = UsersByGenres
-                .joinUsersAndGenres(ratingsCleanObserverd, moviesCleanObserved);
+                .joinUsersAndGenres(ratingsCleanObserved, moviesCleanObserved);
 
-        Assert.assertEquals(joinedUsersGenresExpected.toString(), joinedUsersAndGenresObserved.toString());
+        Assert.assertEquals(joinedUsersAndGenresObserved.toString(),
+                            joinedUsersGenresExpected.toString());
     }
 }
