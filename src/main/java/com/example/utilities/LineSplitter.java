@@ -14,7 +14,7 @@ public class LineSplitter extends DoFn<String, Pair<String, String>> {
 
     public Integer keyColumn, valueColumn;
 
-    static String ROW_SEPARATOR = "::";;
+    static String ROW_SEPARATOR = "::";
 
     public LineSplitter(Integer columnForKey,
                         Integer columnForValue) {
@@ -29,7 +29,9 @@ public class LineSplitter extends DoFn<String, Pair<String, String>> {
     @Override
     public void process (String input, Emitter <Pair<String, String >> emitter) {
         String[] parts = splitStringBySeparator(input, ROW_SEPARATOR);
-        // We can compare parts.length against an expected value
+        // Future improvements:
+        // 1. Compare parts.length against an expected value
+        // 2. Check if K, V columns exist in parts
         // Pair.of returns a (k, v) pair
         emitter.emit(Pair.of(parts[this.keyColumn], parts[this.valueColumn]));
     }
