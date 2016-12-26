@@ -1,4 +1,4 @@
-package com.example;
+package com.example.utilities;
 
 import org.apache.crunch.DoFn;
 import org.apache.crunch.PTable;
@@ -16,20 +16,24 @@ public class FilePrep {
 
     static private final String ROW_SEPARATOR = "::";
 
+
     static private final String CELL_SEPARATOR = "\\|";
+
 
     static private String[] splitStringBySeparator(String row, String separator) {
         return StringUtils.split(row, separator);
     }
 
+
     static private PTypeFamily getTypeFamilyFromTextFile(PCollection<String>textFile) {
         return textFile.getTypeFamily();
     }
 
+
     // split file by rows (with separator)
     static public PTable<String, String> getFileAsPTable(PCollection<String> textFile,
-                                                             final Integer columnK,
-                                                             final Integer columnV) {
+                                                         final Integer columnK,
+                                                         final Integer columnV) {
         PTypeFamily tf = getTypeFamilyFromTextFile(textFile);
         return textFile.parallelDo(new DoFn<String, Pair<String, String>>() {
 
@@ -42,10 +46,11 @@ public class FilePrep {
         }, tf.tableOf(tf.strings(), tf.strings()));
     }
 
+
     // split by row and by tag
     static public PTable<String, String> getMovieFileAsPTable(PCollection<String> textFile,
-                                                         final Integer columnK,
-                                                         final Integer columnV) {
+                                                             final Integer columnK,
+                                                             final Integer columnV) {
         PTypeFamily tf = getTypeFamilyFromTextFile(textFile);
         return textFile.parallelDo(new DoFn<String, Pair<String, String>>() {
 
@@ -59,6 +64,7 @@ public class FilePrep {
             }
         }, tf.tableOf(tf.strings(), tf.strings()));
     }
+
 
     // return three columns
     static public PTable<String, Pair<String, String>> getRatingsFileAsPTable(PCollection<String> textFile,

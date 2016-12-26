@@ -1,4 +1,4 @@
-package com.example;
+package com.example.utilities;
 
 import org.apache.crunch.*;
 import org.apache.crunch.DoFn;

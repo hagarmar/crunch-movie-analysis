@@ -1,4 +1,4 @@
-package com.example;
+package com.example.utilities;
 
 import org.apache.crunch.CombineFn;
 import org.apache.crunch.MapFn;
@@ -34,10 +34,14 @@ public class ComputeXPerY {
                                 maxValue = dw.second();
                                 maxTag = dw.first();
                             }
+                            if ((dw.second() == maxValue) & !(dw.first().equals(maxTag))) {
+                                maxTag = maxTag + "|" + dw.first();
+                            }
                         }
                         emitter.emit(Pair.of(input.first(), Pair.of(maxTag, maxValue)));
                     }
                 })
+                // return just the argmax
                 .mapValues(new MapFn<Pair<String, Long>, String>() {
                     public String map(Pair<String, Long> maxTagPair) {
                         return maxTagPair.first();
@@ -45,6 +49,7 @@ public class ComputeXPerY {
                 }, (Writables.strings()));
 
     }
+
 
     static public PTable<String, String> countAndMaxXPerY(PTable<String, Pair<String, String>> joinedXAndY) {
         PTable<Pair<String, String>, Long> counted = countXPerY(joinedXAndY);

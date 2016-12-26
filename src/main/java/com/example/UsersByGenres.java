@@ -1,7 +1,10 @@
 package com.example;
 
+import com.example.utilities.ComputeXPerY;
+import com.example.utilities.FilePrep;
 import org.apache.crunch.*;
 import org.apache.crunch.io.At;
+import org.apache.crunch.lib.Join;
 import org.apache.crunch.types.writable.Writables;
 
 /**
@@ -9,12 +12,12 @@ import org.apache.crunch.types.writable.Writables;
  */
 public class UsersByGenres {
 
-    static private PTable<String, String> prepMovies(PCollection<String> movies) {
+    static public PTable<String, String> prepMovies(PCollection<String> movies) {
         return FilePrep.getMovieFileAsPTable(movies, 0, 2);
     }
 
 
-    static private PTable<String, String> prepRatings(PCollection<String> ratings) {
+    static public PTable<String, String> prepRatings(PCollection<String> ratings) {
         // Remove users with null ratings (not sure there are any, but just to be sure)
         // After we're sure users have ratings, throw out the ratings
         return FilePrep
@@ -38,15 +41,14 @@ public class UsersByGenres {
     }
 
 
-    static private PTable<String, Pair<String, String>> joinUsersAndGenres(PTable<String, String> users,
+    static public PTable<String, Pair<String, String>> joinUsersAndGenres(PTable<String, String> users,
                                                                            PTable<String, String> genres) {
-        return JoinAndFilter.compute(users, genres);
+        return Join.innerJoin(users, genres);
     }
 
 
-    static public void run(PCollection<String> ratings,
-                           PCollection<String> movies,
-                           String outputPath) {
+    static public PTable<String, String> getMaxGenrePerUser(PCollection<String> ratings,
+                                                            PCollection<String> movies) {
 
         PTable<String, String> moviesClean = prepMovies(movies);
         PTable<String, String> usersClean = prepRatings(ratings);
@@ -57,6 +59,17 @@ public class UsersByGenres {
 
         // Leave only the tag
         PTable<String, String> onlyGenrePerUser = ComputeXPerY.countAndMaxXPerY(joinedUsersGenres);
+
+        return onlyGenrePerUser;
+    }
+
+
+    static public void run(PCollection<String> ratings,
+                           PCollection<String> movies,
+                           String outputPath) {
+
+        // Leave only the tag
+        PTable<String, String> onlyGenrePerUser = getMaxGenrePerUser(ratings, movies);
 
         // Write result to file
         onlyGenrePerUser.write(At.textFile(outputPath), Target.WriteMode.OVERWRITE);
