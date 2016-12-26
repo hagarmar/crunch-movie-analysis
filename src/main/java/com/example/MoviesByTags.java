@@ -8,8 +8,9 @@ import org.apache.crunch.lib.Join;
 import org.apache.crunch.types.writable.Writables;
 
 /**
- * Created by hagar on 12/25/16.
  * Class for getting the most common tag per movie.
+ *
+ * Created by hagar on 12/25/16.
  */
 public class MoviesByTags {
 

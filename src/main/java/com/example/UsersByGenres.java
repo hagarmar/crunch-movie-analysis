@@ -7,6 +7,8 @@ import org.apache.crunch.lib.Join;
 import org.apache.crunch.types.writable.Writables;
 
 /**
+ * Class for getting the most common genre for a rater.
+ *
  * Created by hagar on 12/25/16.
  */
 public class UsersByGenres {
@@ -30,17 +32,9 @@ public class UsersByGenres {
         return ratings
                 .parallelDo(new LineSplitterForPair(1, 0,
                             2, LineSplitterForPair.numExpectedRowsRatings),
-                    Writables.tableOf(Writables.strings(), Writables.pairs(Writables.strings(), Writables.strings())))
-                .filter(new FilterFn<Pair<String, Pair<String, String>>>() {
-                    @Override
-                    public boolean accept(Pair<String, Pair<String, String>> moviesPerUserRating) {
-                        if (moviesPerUserRating.second().second() == null) {
-                            return false;
-                        } else {
-                            return true;
-                        }
-                    }
-                })
+                    Writables.tableOf(Writables.strings(),
+                            Writables.pairs(Writables.strings(), Writables.strings())))
+                .filter(new FilterEmptyValues())
                 .mapValues(new MapFn<Pair<String, String>, String>() {
                     @Override
                     public String map(Pair<String, String> usersAndRatings) {

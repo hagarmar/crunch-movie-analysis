@@ -23,24 +23,7 @@ public class ComputeXPerY {
     static private PTable<String, String> maxXPerY(PTable<Pair<String, String>, Long> countXPerY) {
         return ReorderKV.getReorderedTable(countXPerY) // returns PTable(String, (String, Integer))
                 .groupByKey() // returns PTableGrouped(String, (String, Integer))
-                .combineValues(new CombineFn<String, Pair<String, Long>>() {
-                    @Override
-                    public void process(Pair<String, Iterable<Pair<String, Long>>> input,
-                                        Emitter<Pair<String, Pair<String, Long>>> emitter) {
-                        String maxTag = null;
-                        Long maxValue = 0L;
-                        for (Pair<String, Long> dw : input.second()) {
-                            if (dw.second() > maxValue) {
-                                maxValue = dw.second();
-                                maxTag = dw.first();
-                            }
-                            if ((dw.second() == maxValue) & !(dw.first().equals(maxTag))) {
-                                maxTag = maxTag + "|" + dw.first();
-                            }
-                        }
-                        emitter.emit(Pair.of(input.first(), Pair.of(maxTag, maxValue)));
-                    }
-                })
+                .combineValues(new MostFrequentPair())
                 // return just the argmax
                 .mapValues(new MapFn<Pair<String, Long>, String>() {
                     public String map(Pair<String, Long> maxTagPair) {

@@ -59,11 +59,11 @@ public class MovieAnalysis extends Configured implements Tool, Serializable {
         MoviesByTags.run(movies, tags, outputPathTagsMovies);
 
         // get most common genre per rater
-//        UsersByGenres.run(ratings, movies, outputPathUserGenres);
+        UsersByGenres.run(ratings, movies, outputPathUserGenres);
 
         PipelineResult result = pipeline.done();
 
-        System.out.print("Result " + result.succeeded() + "\n");
+        System.out.print("Succeeded: " + result.succeeded() + "\n");
         return result.succeeded() ? 0 : 1;
     }
 }
