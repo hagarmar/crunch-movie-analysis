@@ -1,7 +1,5 @@
 package com.example.utilities;
 
-import com.sun.tools.javac.util.List;
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader;
 import org.apache.crunch.Emitter;
 import org.apache.crunch.Pair;
 import org.junit.Assert;
@@ -9,9 +7,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import javax.sound.sampled.Line;
-import java.util.ArrayList;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
