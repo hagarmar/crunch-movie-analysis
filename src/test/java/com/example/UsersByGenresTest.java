@@ -47,15 +47,16 @@ public class UsersByGenresTest {
     private PCollection<String> ratings = MemPipeline.typedCollectionOf(
             Writables.strings(),
             List.of(
-                    "1::122::5::838985046",
-                    "1::329::5::838983392",
-                    "1::316::5::838983392",
-                    "2::122::5::838985046",
-                    "2::339::5::838983392",
-                    "3::316::5::838983392",
-                    "3::339::5::838983392",
-                    "3::340::::838983392",
-                    "4::111::3::838983392"
+                    // user_id, movie_id, rating, timestamp
+                    "122::1::5::838985046",
+                    "329::1::5::838983392",
+                    "316::1::5::838983392",
+                    "122::2::5::838985046",
+                    "339::2::5::838983392",
+                    "316::3::5::838983392",
+                    "339::3::5::838983392",
+                    "340::3::::838983392",
+                    "111::4::3::838983392"
             )
     );
 
@@ -63,6 +64,7 @@ public class UsersByGenresTest {
     private PTable<String, String> ratingsCleanExpected = MemPipeline.typedTableOf(
             Writables.tableOf(Writables.strings(), Writables.strings()),
             List.of(
+                    // movie_id, user_id
                     Pair.of("1", "122"),
                     Pair.of("1", "329"),
                     Pair.of("1", "316"),
@@ -129,16 +131,16 @@ public class UsersByGenresTest {
     @Test
     public void prepMoviesTest() {
         PTable<String, String> moviesCleanObserved = getPreppedMovie(movies);
-        Assert.assertEquals(moviesCleanObserved.toString(),
-                            moviesCleanExpected.toString());
+        Assert.assertEquals(moviesCleanExpected.toString(),
+                            moviesCleanObserved.toString());
 
     }
 
     @Test
     public void prepRatingsTest() {
         PTable<String, String> ratingsCleanObserved = getPreppedRatings(ratings);
-        Assert.assertEquals(ratingsCleanObserved.toString(),
-                            ratingsCleanExpected.toString());
+        Assert.assertEquals(ratingsCleanExpected.toString(),
+                            ratingsCleanObserved.toString());
 
     }
 
@@ -150,7 +152,7 @@ public class UsersByGenresTest {
         PTable<String, Pair<String, String>> joinedUsersAndGenresObserved = UsersByGenres
                 .joinUsersAndGenres(ratingsCleanObserved, moviesCleanObserved);
 
-        Assert.assertEquals(joinedUsersAndGenresObserved.toString(),
-                            joinedUsersGenresExpected.toString());
+        Assert.assertEquals(joinedUsersGenresExpected.toString(),
+                            joinedUsersAndGenresObserved.toString());
     }
 }

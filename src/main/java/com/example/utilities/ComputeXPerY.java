@@ -15,7 +15,7 @@ import org.apache.crunch.types.writable.Writables;
  */
 public class ComputeXPerY {
 
-    static private PTable<Pair<String, String>, Long> countXPerY(
+    static public PTable<Pair<String, String>, Long> countXPerY(
             PTable<String, Pair<String, String>> joinedXAndY) {
         PTable<String, String> countedXPerY = ReorderKV.makeValueIntoKey(joinedXAndY);
         // builtin function for returning the count per key
@@ -23,7 +23,7 @@ public class ComputeXPerY {
     }
 
 
-    static private PTable<String, String> maxXPerY(PTable<Pair<String, String>, Long> countXPerY) {
+    static public PTable<String, String> maxXPerY(PTable<Pair<String, String>, Long> countXPerY) {
         return ReorderKV.getReorderedTable(countXPerY) // returns PTable(String, (String, Integer))
                 .groupByKey() // returns PTableGrouped(String, (String, Integer))
                 .combineValues(new MostFrequentPair())

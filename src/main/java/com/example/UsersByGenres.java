@@ -30,7 +30,7 @@ public class UsersByGenres {
         // Remove users with null ratings (not sure there are any, but just to be sure)
         // After we're sure users have ratings, throw out the ratings
         return ratings
-                .parallelDo(new LineSplitterForPair(0, 1, 2),
+                .parallelDo(new LineSplitterForPair(1, 0, 2),
                     Writables.tableOf(Writables.strings(),
                             Writables.pairs(Writables.strings(), Writables.strings())))
                 .filter(new FilterMissingRatings())
