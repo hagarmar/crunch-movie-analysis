@@ -19,6 +19,7 @@ public class UsersByGenres {
                 Writables.tableOf(Writables.strings(), Writables.strings())
                 );
 
+        // future improvements: filter out movies without genres
         return movieTable.parallelDo(
                 new GenreSplitter(),
                 Writables.tableOf(Writables.strings(), Writables.strings())
@@ -40,6 +41,7 @@ public class UsersByGenres {
                         return usersAndRatings.first();
                     }
                 }, Writables.strings());
+
     }
 
 
